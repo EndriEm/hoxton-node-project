@@ -51,26 +51,25 @@ app.get("/teachers", async (req, res) => {
   }
 });
 
-app.post("/techers", async (req, res) => {
+app.post("/comments", async (req, res) => {
   try {
-    const teacher = await prisma.teacher.create({
+    const comment = await prisma.user.create({
       data: req.body,
-      include: { Faculty: true },
     });
-    res.send(teacher);
+    res.send(comment);
   } catch (error) {
     //@ts-ignore
     res.status(400).send({ error: error.message });
   }
 });
 
-app.delete("/teachers/:id", async (req, res) => {
+app.delete("/comments/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const teacher = await prisma.teacher.delete({
+    const comment = await prisma.user.delete({
       where: { id },
     });
-    res.send(teacher);
+    res.send(comment);
   } catch (error) {
     //@ts-ignore
     res.status(400).send({ error: error.message });

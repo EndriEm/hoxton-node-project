@@ -33,3 +33,10 @@ model Dega {
   Faculty   Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   facultyId Int
 }
+
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  comment String
+}
