@@ -12,9 +12,27 @@ const port = 2222;
 app.get("/faculties", async (req, res) => {
   try {
     const faculties = await prisma.faculty.findMany({
-      include: { teachers: true },
+      include: { teachers: true, deget: true },
     });
     res.send(faculties);
+  } catch (error) {
+    //@ts-ignore
+    res.status(400).send({ error: error.message });
+  }
+});
+
+app.get("/faculties/:id", async (req, res) => {
+  try {
+    const faculty = await prisma.faculty.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { teachers: true, deget: true },
+    });
+
+    if (faculty) {
+      res.send(faculty);
+    } else {
+      res.status(404).send({ error: "User not found." });
+    }
   } catch (error) {
     //@ts-ignore
     res.status(400).send({ error: error.message });
