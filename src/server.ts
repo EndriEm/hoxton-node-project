@@ -51,6 +51,16 @@ app.get("/teachers", async (req, res) => {
   }
 });
 
+app.get("/comments", async (req, res) => {
+  try {
+    const comments = await prisma.user.findMany({});
+    res.send(comments);
+  } catch (error) {
+    //@ts-ignore
+    res.status(400).send({ error: error.message });
+  }
+});
+
 app.post("/comments", async (req, res) => {
   try {
     const comment = await prisma.user.create({
