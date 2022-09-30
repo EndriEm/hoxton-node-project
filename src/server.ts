@@ -64,7 +64,7 @@ app.get("/faculties/:id", async (req, res) => {
 
 app.get("/comments", async (req, res) => {
   try {
-    const comments = await prisma.user.findMany({});
+    const comments = await prisma.commenter.findMany({});
     res.send(comments);
   } catch (error) {
     //@ts-ignore
@@ -74,7 +74,7 @@ app.get("/comments", async (req, res) => {
 
 app.post("/comments", async (req, res) => {
   try {
-    const comment = await prisma.user.create({
+    const comment = await prisma.commenter.create({
       data: req.body,
     });
     res.send(comment);
@@ -87,7 +87,7 @@ app.post("/comments", async (req, res) => {
 app.delete("/comments/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const comment = await prisma.user.delete({
+    const comment = await prisma.commenter.delete({
       where: { id },
     });
     res.send(comment);
