@@ -1,13 +1,36 @@
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
+app.options("*", cors());
 app.use(express.json());
 const prisma = new PrismaClient();
 
 const port = 2222;
+
+const SECRET = process.env.SECRET!;
+
+function getToken(id: number) {
+  return jwt.sign({ id: id }, SECRET, {
+    expiresIn: "10 minutes",
+  });
+}
+
+async function getCurrentUser(token: string) {
+  const decryptedInfo = jwt.verify(token, SECRET);
+  const user = await prisma.user.findUnique({
+    // @ts-ignore
+    where: { id: decryptedInfo.id },
+  });
+  return user;
+}
 
 app.get("/faculties", async (req, res) => {
   try {
@@ -33,18 +56,6 @@ app.get("/faculties/:id", async (req, res) => {
     } else {
       res.status(404).send({ error: "User not found." });
     }
-  } catch (error) {
-    //@ts-ignore
-    res.status(400).send({ error: error.message });
-  }
-});
-
-app.get("/teachers", async (req, res) => {
-  try {
-    const teachers = await prisma.teacher.findMany({
-      include: { Faculty: true },
-    });
-    res.send(teachers);
   } catch (error) {
     //@ts-ignore
     res.status(400).send({ error: error.message });
@@ -82,6 +93,54 @@ app.delete("/comments/:id", async (req, res) => {
     res.send(comment);
   } catch (error) {
     //@ts-ignore
+    res.status(400).send({ error: error.message });
+  }
+});
+
+app.post("/sign-up", async (req, res) => {
+  try {
+    const match = await prisma.user.findUnique({
+      where: { email: req.body.email },
+    });
+
+    if (match) {
+      res.status(400).send({ error: "This account already exists." });
+    } else {
+      const user = await prisma.user.create({
+        data: {
+          email: req.body.email,
+          password: bcrypt.hashSync(req.body.password),
+        },
+      });
+
+      res.send({ user: user, token: getToken(user.id) });
+    }
+  } catch (error) {
+    // @ts-ignore
+    res.status(400).send({ error: error.message });
+  }
+});
+
+app.post("/sign-in", async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { email: req.body.email },
+  });
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
+    res.send({ user: user, token: getToken(user.id) });
+  } else {
+    res.status(400).send({ error: "Invalid email/password combination." });
+  }
+});
+
+app.get("/validate", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      const user = await getCurrentUser(req.headers.authorization);
+      // @ts-ignore
+      res.send({ user, token: getToken(user.id) });
+    }
+  } catch (error) {
+    // @ts-ignore
     res.status(400).send({ error: error.message });
   }
 });
